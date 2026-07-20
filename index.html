@@ -3,30 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Check in-out Dispenser</title>
+  <title>เข้าสู่ระบบ - OT DispenserService</title>
   
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1GhR1quDqH5UIkMWIygRGM1zT34W3kGOW">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#ef4d4d">
+  <!-- สี Theme Bar บนมือถือ ปรับให้เข้ากับธีม Coral/Salmon -->
+  <meta name="theme-color" content="#f26968">
 
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="https://script.google.com">
 
   <style>
-    /* 3. เปลี่ยนพื้นหลังเป็นสีแดงธีมแอป เพื่อให้สายตาไม่รู้สึกว่า "ค้างที่หน้าขาว" */
+    * {
+      box-sizing: border-box;
+    }
+    
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      background-color: #FFF0F5; 
+      margin: 0; 
+      padding: 0;
+      width: 100%; 
+      height: 100%;
+      height: 100dvh;
+      background-color: #f26968; /* สี Coral ธีมหลักของหน้าเว็บ */
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
     .app-container {
       width: 100%;
-      height: 100vh;
+      height: 100%;
       display: flex;
       flex-direction: column;
     }
@@ -36,46 +44,80 @@
       height: 100%;
       border: none;
       display: block;
-      opacity: 0; /* ซ่อนไว้จนกว่าจะโหลดเสร็จ */
-      transition: opacity 0.3s ease;
+      opacity: 0;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* 4. Loading Screen แบบ Minimal ที่โหลดไวที่สุด */
+    /* Loading Screen แบบ Minimal Luxe */
     #loading-screen {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: #FFF0F5; /* ใช้สีแดงเพื่อให้กลมกลืน */
+      background: radial-gradient(circle at center, #f57a79 0%, #eb5b5a 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 99;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.4s ease, visibility 0.4s;
     }
 
-    .loader {
-      width: 45px; height: 45px;
-      border: 4px solid rgba(255,255,255,0.3);
-      border-top: 4px solid #000000;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    /* Minimal Soft Pulse Loader */
+    .pulse-loader {
+      position: relative;
+      width: 50px;
+      height: 50px;
     }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .pulse-loader::before, .pulse-loader::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.85);
+      animation: pulse 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    .pulse-loader::after {
+      animation-delay: -0.8s;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    .loading-text {
+      color: #ffffff;
+      margin-top: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Loading Screen เรียบหรู -->
   <div id="loading-screen">
-    <div class="loader"></div>
-    <div style="color: white; margin-top: 15px; font-family: sans-serif; font-size: 14px; letter-spacing: 1px;">กำลังโหลดระบบ...</div>
+    <div class="pulse-loader"></div>
+    <div class="loading-text">Authenticating...</div>
   </div>
 
   <div class="app-container">
     <iframe
       id="appFrame"
-      src="https://script.google.com/macros/s/AKfycbxDxLm9RTE7_mNvuEs3f7hjr8fOGjaQRzyjOqGD3WJBBOgnLj_9sLIV54IURswOey-z6Q/exec"
-      allow="geolocation *; camera *; microphone *"
+      src="https://script.google.com/macros/s/AKfycbwXBDUn2vDHmZ0umvfRWLFAX9P2DliKcSJE4O_cYLcb1Skm66-VBUvKZX3k1FP9--4Dww/exec"
+      allow="geolocation; camera; microphone"
       scrolling="yes"
       onload="hideLoader()"> 
     </iframe>
@@ -86,28 +128,23 @@
       const loader = document.getElementById('loading-screen');
       const frame = document.getElementById('appFrame');
       
-      // แสดง Iframe และซ่อน Loading แบบนุ่มนวล
+      // แสดง Iframe และจาง Loading ออก
       frame.style.opacity = '1';
       loader.style.opacity = '0';
       
       setTimeout(function() {
-        loader.style.display = 'none';
+        loader.style.visibility = 'hidden';
       }, 400);
     }
 
-    // ปรับความสูงอัตโนมัติ (คงเดิม)
-    window.addEventListener('message', function(e) {
-      if (e.data.frameHeight) {
-        var frame = document.getElementById('appFrame');
-        if (frame) {
-          frame.style.height = e.data.frameHeight + 'px';
-        }
-      }
-    }, false);
+    // Safety Timeout: หากโหลดเกิน 5 วินาที ให้ตัดเข้าหน้าเว็บทันทีเพื่อไม่ให้ผู้ใช้รอนาน
+    setTimeout(hideLoader, 5000);
 
-    // ป้องกัน Pull-to-refresh
+    // ป้องกันการ Pinch-zoom บนมือถือ
     document.addEventListener('touchmove', function(e) {
-      if (e.scale !== 1) { e.preventDefault(); }
+      if (e.scale && e.scale !== 1) { 
+        e.preventDefault(); 
+      }
     }, { passive: false });
   </script>
 
